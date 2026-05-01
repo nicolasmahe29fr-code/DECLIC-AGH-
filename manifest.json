@@ -1,0 +1,18 @@
+{
+  "name": "Déclic AGH",
+  "short_name": "Déclic",
+  "description": "Hub de lancement Déclic AGH — hypnothérapie Nantes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2C2420",
+  "theme_color": "#2C2420",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
