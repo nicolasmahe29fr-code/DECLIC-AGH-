@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Déclic AGH</title>
+  <meta name="theme-color" content="#2C2420" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Déclic AGH" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #FAF7F4; color: #2C2420; min-height: 100vh; }
+    input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
+    input:focus, select:focus, textarea:focus { outline: none; }
+    @keyframes pulse { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation: fadeIn 0.3s ease forwards; }
+    :root {
+      --rose: #EDD5D0; --rose-deep: #C9938A; --rose-text: #7A4A44;
+      --vert: #C8DDD8; --vert-deep: #7AADA4; --vert-text: #2E5E58;
+      --cream: #FAF7F4; --dark: #2C2420; --mid: #8A7370;
+      --border: #E8DDD8; --white: #FFFFFF;
+    }
+    #app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+    /* HEADER */
+    .header { background: var(--dark); padding: 20px 20px 16px; padding-top: calc(20px + env(safe-area-inset-top)); }
+    .header-label { font-size: 11px; color: var(--rose); opacity: 0.6; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .header-title { font-size: 22px; font-weight: 700; color: white; font-family: 'Playfair Display', serif; margin-bottom: 14px; }
+    .countdown { display: flex; gap: 6px; margin-bottom: 14px; }
+    .cd-unit { flex: 1; background: rgba(255,255,255,0.07); border-radius: 10px; padding: 10px 6px; text-align: center; }
+    .cd-val { font-size: 24px; font-weight: 700; color: var(--rose); font-family: 'Playfair Display', serif; line-height: 1; }
+    .cd-lbl { font-size: 9px; color: var(--rose); opacity: 0.5; margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
+    .prog-bar-wrap { }
+    .prog-bar-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .prog-bar-lbl { font-size: 10px; color: var(--rose); opacity: 0.6; text-transform: uppercase; letter-spacing: 0.8px; }
+    .prog-bar-pct { font-size: 10px; color: var(--rose); font-weight: 700; }
+    .prog-bar-track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+    .prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--rose-deep), var(--vert-deep)); border-radius: 99px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+    .prog-bar-sub { font-size: 10px; color: var(--rose); opacity: 0.45; margin-top: 4px; }
+    /* NAV */
+    .nav { display: flex; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .nav-btn { flex: 1; padding: 12px 2px; font-size: 11px; font-weight: 400; color: var(--mid); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+    .nav-btn.active { font-weight: 700; color: var(--rose-deep); border-bottom-color: var(--rose-deep); }
+    /* CONTENT */
+    .content { padding: 16px 16px 80px; flex: 1; }
+    /* CARDS */
+    .card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .card-rose { background: rgba(237,213,208,0.4); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .card-vert { background: rgba(200,221,216,0.4); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 10px; }
+    /* TODOS */
+    .todo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .todo-check { width: 20px; height: 20px; border-radius: 6px; border: 2px solid; background: transparent; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; }
+    .todo-text { font-size: 13px; flex: 1; line-height: 1.4; }
+    .todo-text.done { text-decoration: line-through; opacity: 0.45; }
+    .todo-del { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.4; padding: 0 2px; }
+    .todo-input-row { display: flex; gap: 8px; margin-top: 10px; }
+    .todo-input { flex: 1; background: rgba(255,255,255,0.6); border: none; border-radius: 8px; padding: 8px 12px; font-size: 12px; }
+    .todo-add-btn { border: none; border-radius: 8px; color: white; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 700; }
+    /* EVENTS */
+    .event-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .event-row:last-child { border-bottom: none; }
+    .event-title { font-size: 13px; font-weight: 600; color: var(--dark); }
+    .event-time { font-size: 11px; color: var(--mid); margin-top: 2px; }
+    .tag { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+    /* BUTTONS */
+    .btn-primary { background: var(--rose-deep); border: none; border-radius: 8px; color: white; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-vert { background: var(--vert-deep); border: none; border-radius: 8px; color: white; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-ghost { background: transparent; border: 1px solid var(--rose-deep); border-radius: 8px; color: var(--rose-deep); padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-grad { background: linear-gradient(135deg, var(--rose-deep), var(--vert-deep)); border: none; border-radius: 10px; color: white; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; }
+    /* INSTA */
+    .slide-preview { background: var(--dark); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; text-align: center; }
+    .slide-preview-title { font-size: 16px; font-weight: 700; color: var(--rose); font-family: 'Playfair Display', serif; line-height: 1.3; }
+    .slide-preview-sub { font-size: 11px; color: var(--vert); margin-top: 6px; opacity: 0.85; }
+    .slide-preview-hint { font-size: 9px; color: var(--mid); margin-top: 8px; opacity: 0.5; }
+    .dot-nav { display: flex; gap: 5px; }
+    .dot { height: 8px; border-radius: 99px; border: none; cursor: pointer; transition: all 0.2s; padding: 0; }
+    /* ROADMAP */
+    .phase-card { border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+    .phase-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .phase-badge { border-radius: 20px; padding: 4px 10px; font-size: 11px; color: white; font-weight: 700; }
+    .phase-prog-track { height: 3px; border-radius: 99px; overflow: hidden; margin-bottom: 12px; background: rgba(0,0,0,0.08); }
+    .phase-prog-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+    /* LOADER */
+    .loader { display: flex; gap: 5px; padding: 12px 0; }
+    .loader-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--vert-deep); }
+    .input-field { width: 100%; background: rgba(255,255,255,0.7); border: none; border-radius: 7px; padding: 8px 10px; font-size: 12px; margin-bottom: 6px; }
+    .select-field { width: 100%; border: none; border-radius: 8px; padding: 9px 12px; font-size: 12px; margin-bottom: 6px; }
+    .textarea-field { width: 100%; border: none; border-radius: 8px; padding: 9px 12px; font-size: 12px; resize: none; }
+    .copy-btn { border: none; border-radius: 6px; color: white; padding: 4px 10px; font-size: 10px; cursor: pointer; font-weight: 600; }
+    .nav-btns { display: flex; gap: 8px; margin-top: 10px; }
+    .nav-btn-slide { flex: 1; background: var(--border); border: none; border-radius: 8px; padding: 9px; font-size: 12px; cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-label">Lancement · 1er juillet 2026</div>
+    <div class="header-title">Déclic AGH</div>
+    <div class="countdown" id="countdown"></div>
+    <div class="prog-bar-wrap">
+      <div class="prog-bar-top">
+        <span class="prog-bar-lbl">Progression</span>
+        <span class="prog-bar-pct" id="prog-pct">0%</span>
+      </div>
+      <div class="prog-bar-track"><div class="prog-bar-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-bar-sub" id="prog-sub"></div>
+    </div>
+  </div>
+
+  <nav class="nav" id="nav"></nav>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'declic-hub-v2';
+const LAUNCH = new Date('2026-07-01T00:00:00');
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch {}
+}
+
+const DEFAULTS = {
+  tab: 'home',
+  declicTodos: [
+    {id:1,text:"Finaliser les 3 posts Instagram de lancement",done:false},
+    {id:2,text:"Contacter 5 ambassadrices tier 1",done:false},
+    {id:3,text:"Créer la page de vente Déclic AGH",done:false},
+    {id:4,text:"Préparer le protocole séance 1",done:false},
+    {id:5,text:"Ouvrir le calendrier de réservation",done:false},
+  ],
+  persoTodos: [
+    {id:1,text:"Appel famille ce week-end",done:false},
+    {id:2,text:"RDV dentiste confirmé",done:true},
+  ],
+  events: [
+    {title:"Visio avec Aurore Puéricultrice",date:"5 mai",time:"13:00",type:"pro"},
+    {title:"Dentiste Nico",date:"6 mai",time:"16:15",type:"perso"},
+  ],
+  roadmap: [
+    {phase:"Phase 1",label:"Fondations",dates:"Mai 2026",color:"#EDD5D0",deep:"#C9938A",text:"#7A4A44",items:[
+      {id:"r1",text:"Nommer et finaliser l'offre Déclic AGH",done:true},
+      {id:"r2",text:"Définir les 3 paliers de prix (63€ / 90€ / 310€)",done:true},
+      {id:"r3",text:"Créer le protocole des 3 séances",done:false},
+      {id:"r4",text:"Ouvrir le compte Instagram @mahehypnose",done:false},
+      {id:"r5",text:"Rédiger la page de présentation Déclic AGH",done:false},
+    ]},
+    {phase:"Phase 2",label:"Ambassadrices",dates:"Juin 2026",color:"#E8D5C8",deep:"#B07850",text:"#5A3820",items:[
+      {id:"r6",text:"Contacter 5 ambassadrices tier 1 (proches)",done:false},
+      {id:"r7",text:"Lancer la phase test à 90€ (5 clientes)",done:false},
+      {id:"r8",text:"Collecter les premiers retours et témoignages",done:false},
+      {id:"r9",text:"Publier 3 posts Instagram de lancement",done:false},
+      {id:"r10",text:"Activer le canal groupe de mamans (partenaire)",done:false},
+    ]},
+    {phase:"Phase 3",label:"Lancement",dates:"1er juillet 2026",color:"#C8DDD8",deep:"#7AADA4",text:"#2E5E58",items:[
+      {id:"r11",text:"Ouvrir le calendrier de réservation en ligne",done:false},
+      {id:"r12",text:"Passer au tarif plein 310€",done:false},
+      {id:"r13",text:"Publier le carrousel de lancement officiel",done:false},
+      {id:"r14",text:"Envoyer email aux ambassadrices pour relai",done:false},
+      {id:"r15",text:"Premier bilan à J+7",done:false},
+    ]},
+  ],
+  instaSubject: "Présentation de Déclic AGH",
+  instaCustom: "",
+  instaResult: null,
+  instaSlide: 0,
+};
+
+const saved = loadState();
+const STATE = Object.assign({}, DEFAULTS, saved);
+
+const INSTA_SUBJECTS = [
+  "Présentation de Déclic AGH","Témoignage ambassadrice",
+  "Comment fonctionne l'hypnose ?","Manger émotionnel — en parler sans tabou",
+  "63 jours pour changer ses automatismes","Pourquoi pas un régime de plus",
+  "La séance 1 — qu'est-ce qui se passe ?","Les questions qu'on me pose souvent",
+  "Mon approche : sans promesse miracle","L'anneau gastrique hypnotique expliqué simplement",
+];
+
+// ── COUNTDOWN ──────────────────────────────────────────────────────────────
+function updateCountdown() {
+  const diff = LAUNCH - new Date();
+  const days = Math.max(0, Math.floor(diff/86400000));
+  const hours = Math.max(0, Math.floor((diff%86400000)/3600000));
+  const mins = Math.max(0, Math.floor((diff%3600000)/60000));
+  const secs = Math.max(0, Math.floor((diff%60000)/1000));
+  const el = document.getElementById('countdown');
+  if (!el) return;
+  el.innerHTML = [{v:days,l:"jours"},{v:hours,l:"h"},{v:mins,l:"min"},{v:secs,l:"sec"}]
+    .map(({v,l}) => `<div class="cd-unit"><div class="cd-val">${String(v).padStart(2,'0')}</div><div class="cd-lbl">${l}</div></div>`).join('');
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// ── PROGRESS ───────────────────────────────────────────────────────────────
+function updateProgress() {
+  const all = STATE.declicTodos;
+  const done = all.filter(t=>t.done).length;
+  const pct = all.length ? Math.round(done/all.length*100) : 0;
+  const pf = document.getElementById('prog-fill');
+  const pp = document.getElementById('prog-pct');
+  const ps = document.getElementById('prog-sub');
+  if (pf) pf.style.width = pct+'%';
+  if (pp) pp.textContent = pct+'%';
+  if (ps) ps.textContent = `${done}/${all.length} tâches Déclic`;
+}
+
+// ── NAV ────────────────────────────────────────────────────────────────────
+const TABS = [{id:'home',label:'Accueil'},{id:'todos',label:'To-do'},{id:'agenda',label:'Agenda'},{id:'insta',label:'Instagram'},{id:'roadmap',label:'Roadmap'}];
+
+function renderNav() {
+  document.getElementById('nav').innerHTML = TABS.map(t =>
+    `<button class="nav-btn${STATE.tab===t.id?' active':''}" onclick="setTab('${t.id}')">${t.label}</button>`
+  ).join('');
+}
+
+function setTab(id) {
+  STATE.tab = id;
+  renderNav();
+  renderContent();
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function e(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs||{})) {
+    if (k==='style' && typeof v==='object') Object.assign(el.style, v);
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else el.setAttribute(k,v);
+  }
+  for (const c of children) {
+    if (c==null) continue;
+    el.appendChild(typeof c==='string' ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+
+function copyText(text, btnEl, label='Copier') {
+  navigator.clipboard.writeText(text).then(()=>{
+    btnEl.textContent='✓ Copié';
+    setTimeout(()=>btnEl.textContent=label, 2000);
+  });
+}
+
+// ── HOME TAB ───────────────────────────────────────────────────────────────
+function renderHome() {
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+
+  // Déclic todos preview
+  const roseCard = document.createElement('div');
+  roseCard.className = 'card-rose';
+  roseCard.innerHTML = `<div class="section-title" style="color:var(--rose-text)">✦ Déclic — En cours</div>`;
+  STATE.declicTodos.filter(t=>!t.done).slice(0,3).forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'todo-row';
+    row.innerHTML = `<button class="todo-check" style="border-color:var(--rose-deep)" onclick="quickToggleDeclic(${t.id})"></button><span class="todo-text" style="color:var(--rose-text)">${t.text}</span>`;
+    roseCard.appendChild(row);
+  });
+  const more = document.createElement('button');
+  more.style.cssText='font-size:11px;color:var(--rose-deep);background:none;border:none;cursor:pointer;margin-top:4px;font-weight:600;';
+  more.textContent='Voir tout →';
+  more.onclick=()=>setTab('todos');
+  roseCard.appendChild(more);
+  wrap.appendChild(roseCard);
+
+  // Next event
+  if (STATE.events[0]) {
+    const ev = STATE.events[0];
+    const vc = document.createElement('div');
+    vc.className = 'card-vert';
+    vc.innerHTML = `<div class="section-title" style="color:var(--vert-text)">Prochain RDV</div><div style="font-size:14px;font-weight:600;color:var(--dark)">${ev.title}</div><div style="font-size:12px;color:var(--vert-text);margin-top:2px">${ev.date}${ev.time?' · '+ev.time:''}</div>`;
+    wrap.appendChild(vc);
+  }
+
+  // Insta shortcut
+  const ic = document.createElement('div');
+  ic.className = 'card';
+  ic.innerHTML = `<div class="section-title" style="color:var(--mid)">Contenu Instagram</div>`;
+  const ib = document.createElement('button');
+  ib.className = 'btn-grad';
+  ib.textContent = '✦ Générer un post';
+  ib.onclick = ()=>setTab('insta');
+  ic.appendChild(ib);
+  wrap.appendChild(ic);
+
+  return wrap;
+}
+
+window.quickToggleDeclic = function(id) {
+  const t = STATE.declicTodos.find(t=>t.id===id);
+  if (t) t.done = !t.done;
+  saveState(); updateProgress(); renderContent();
+};
+
+// ── TODOS TAB ──────────────────────────────────────────────────────────────
+function renderTodoSection(title, items, colorBg, colorText, colorDeep, listKey) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `background:${colorBg};border-radius:14px;padding:16px;margin-bottom:12px;`;
+  const titleEl = document.createElement('div');
+  titleEl.className = 'section-title';
+  titleEl.style.color = colorText;
+  titleEl.textContent = title;
+  wrap.appendChild(titleEl);
+
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'todo-row';
+    const chk = document.createElement('button');
+    chk.className = 'todo-check';
+    chk.style.borderColor = colorDeep;
+    if (item.done) { chk.style.background = colorDeep; chk.textContent = '✓'; }
+    chk.onclick = () => {
+      item.done = !item.done;
+      saveState(); updateProgress(); renderContent();
+    };
+    const txt = document.createElement('span');
+    txt.className = 'todo-text' + (item.done?' done':'');
+    txt.style.color = colorText;
+    txt.textContent = item.text;
+    const del = document.createElement('button');
+    del.className = 'todo-del';
+    del.style.color = colorDeep;
+    del.textContent = '×';
+    del.onclick = () => {
+      STATE[listKey] = STATE[listKey].filter(t=>t.id!==item.id);
+      saveState(); updateProgress(); renderContent();
+    };
+    row.append(chk, txt, del);
+    wrap.appendChild(row);
+  });
+
+  // Add input
+  const inputRow = document.createElement('div');
+  inputRow.className = 'todo-input-row';
+  const inp = document.createElement('input');
+  inp.className = 'todo-input';
+  inp.style.color = colorText;
+  inp.placeholder = 'Ajouter une tâche…';
+  inp.onkeydown = e => { if (e.key==='Enter' && inp.value.trim()) addTodoItem(listKey, inp.value.trim(), colorDeep); };
+  const addBtn = document.createElement('button');
+  addBtn.className = 'todo-add-btn';
+  addBtn.style.background = colorDeep;
+  addBtn.textContent = '+';
+  addBtn.onclick = () => { if (inp.value.trim()) addTodoItem(listKey, inp.value.trim(), colorDeep); };
+  inputRow.append(inp, addBtn);
+  wrap.appendChild(inputRow);
+  return wrap;
+}
+
+function addTodoItem(listKey, text) {
+  STATE[listKey].push({id: Date.now(), text, done: false});
+  saveState(); updateProgress(); renderContent();
+}
+
+function renderTodos() {
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+  wrap.appendChild(renderTodoSection('✦ Déclic AGH', STATE.declicTodos, 'rgba(237,213,208,0.5)', 'var(--rose-text)', 'var(--rose-deep)', 'declicTodos'));
+  wrap.appendChild(renderTodoSection('Perso', STATE.persoTodos, 'rgba(200,221,216,0.5)', 'var(--vert-text)', 'var(--vert-deep)', 'persoTodos'));
+  return wrap;
+}
+
+// ── AGENDA TAB ─────────────────────────────────────────────────────────────
+function renderAgenda() {
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const header = document.createElement('div');
+  header.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;';
+  header.innerHTML = `<div class="section-title" style="color:var(--mid);margin-bottom:0">Agenda</div>`;
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-vert';
+  addBtn.style.cssText='padding:5px 12px;font-size:11px;border-radius:8px;';
+  addBtn.textContent = '+ Ajouter';
+
+  let formOpen = false;
+  const form = document.createElement('div');
+  form.style.cssText='display:none;background:rgba(200,221,216,0.4);border-radius:10px;padding:12px;margin-bottom:12px;';
+  form.innerHTML = `
+    <input class="input-field" id="ev-title" placeholder="Titre" />
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input class="input-field" id="ev-date" type="date" style="flex:1;margin-bottom:0" />
+      <input class="input-field" id="ev-time" type="time" style="flex:1;margin-bottom:0" />
+    </div>`;
+  const saveEvBtn = document.createElement('button');
+  saveEvBtn.className='btn-vert';
+  saveEvBtn.style.cssText='width:100%;border-radius:8px;font-size:12px;';
+  saveEvBtn.textContent='Ajouter à l\'agenda';
+  saveEvBtn.onclick = () => {
+    const t = document.getElementById('ev-title').value.trim();
+    const d = document.getElementById('ev-date').value;
+    const ti = document.getElementById('ev-time').value;
+    if (!t || !d) return;
+    const dateStr = new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    STATE.events.push({title:t, date:dateStr, time:ti, type:'séance'});
+    saveState(); renderContent();
+  };
+  form.appendChild(saveEvBtn);
+
+  addBtn.onclick = () => {
+    formOpen = !formOpen;
+    form.style.display = formOpen ? 'block' : 'none';
+  };
+  header.appendChild(addBtn);
+  card.appendChild(header);
+  card.appendChild(form);
+
+  STATE.events.forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'event-row';
+    const typeColor = ev.type==='séance' ? 'var(--rose)' : ev.type==='perso' ? 'var(--vert)' : '#f0e0d0';
+    const typeTextColor = ev.type==='séance' ? 'var(--rose-text)' : ev.type==='perso' ? 'var(--vert-text)' : 'var(--rose-text)';
+    row.innerHTML = `
+      <div><div class="event-title">${ev.title}</div><div class="event-time">${ev.date}${ev.time?' · '+ev.time:''}</div></div>
+      ${ev.type?`<span class="tag" style="background:${typeColor};color:${typeTextColor}">${ev.type}</span>`:''}`;
+    card.appendChild(row);
+  });
+
+  wrap.appendChild(card);
+  return wrap;
+}
+
+// ── INSTAGRAM TAB ──────────────────────────────────────────────────────────
+function renderInsta() {
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'insta-card';
+
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:18px">✦</span>
+      <div class="section-title" style="color:var(--mid);margin-bottom:0">Carrousel Instagram</div>
+    </div>
+    <select class="select-field" id="insta-subject" style="background:rgba(237,213,208,0.5);color:var(--rose-text)">
+      ${INSTA_SUBJECTS.map(s=>`<option${s===STATE.instaSubject?' selected':''}>${s}</option>`).join('')}
+    </select>
+    <input class="input-field" id="insta-custom" placeholder="Ou écris ton propre sujet…" value="${STATE.instaCustom||''}" style="background:rgba(237,213,208,0.3);border:1px dashed rgba(201,147,138,0.4);color:var(--rose-text);margin-bottom:10px;width:100%;" />
+    <button class="btn-grad" id="insta-gen-btn" onclick="generateCarousel()">✦ Générer le carrousel</button>
+    <div id="insta-result" style="margin-top:14px"></div>`;
+
+  wrap.appendChild(card);
+
+  if (STATE.instaResult) {
+    setTimeout(() => renderInstaResult(), 10);
+  }
+
+  document.getElementById('insta-subject')?.addEventListener('change', e => { STATE.instaSubject = e.target.value; });
+  document.getElementById('insta-custom')?.addEventListener('input', e => { STATE.instaCustom = e.target.value; });
+
+  return wrap;
+}
+
+window.generateCarousel = async function() {
+  const subject = document.getElementById('insta-custom')?.value.trim() || document.getElementById('insta-subject')?.value || STATE.instaSubject;
+  const btn = document.getElementById('insta-gen-btn');
+  if (btn) { btn.textContent='Génération en cours…'; btn.disabled=true; btn.style.background='var(--mid)'; }
+
+  const prompt = `Tu es le directeur créatif Instagram de Nicolas, hypnothérapeute à Nantes. Il lance "Déclic AGH" (Anneau Gastrique Hypnotique), protocole 3 séances sur 63 jours — dimension mentale et comportementale de la perte de poids, sans promesses médicales.
+
+DA : ton chaleureux, direct, honnête. Palette terracotta (#C4704A), rose poudré (#EDD5D0), turquoise menthe (#7BBFB5), fond crème (#FAF5EF). Femmes 35-50 ans.
+
+Sujet : "${subject}"
+
+Génère un carrousel de 5 slides. Pour chaque slide : texte TRÈS court dans l'image (max 8 mots titre, max 15 mots sous-titre) + prompt Grok complet avec le texte intégré visuellement.
+
+Format STRICT :
+SLIDE_1_TEXTE: [titre]
+SLIDE_1_SOUS: [sous-titre]
+SLIDE_1_GROK: [prompt visuel complet]
+
+SLIDE_2_TEXTE: [titre]
+SLIDE_2_SOUS: [sous-titre]
+SLIDE_2_GROK: [prompt]
+
+SLIDE_3_TEXTE: [titre]
+SLIDE_3_SOUS: [sous-titre]
+SLIDE_3_GROK: [prompt]
+
+SLIDE_4_TEXTE: [titre]
+SLIDE_4_SOUS: [sous-titre]
+SLIDE_4_GROK: [prompt]
+
+SLIDE_5_TEXTE: [CTA final]
+SLIDE_5_SOUS: [sous-titre clôture]
+SLIDE_5_GROK: [prompt]
+
+CAPTION: [accroche + 5 hashtags, max 40 mots]`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const slides = [];
+    for (let i=1;i<=5;i++) {
+      const tm = text.match(new RegExp(`SLIDE_${i}_TEXTE:\\s*([^\\n]+)`));
+      const sm = text.match(new RegExp(`SLIDE_${i}_SOUS:\\s*([^\\n]+)`));
+      const gm = text.match(new RegExp(`SLIDE_${i}_GROK:\\s*([\\s\\S]*?)(?=\\nSLIDE_${i+1}_|\\nCAPTION:|$)`));
+      slides.push({texte:tm?.[1]?.trim()||'',sous:sm?.[1]?.trim()||'',grok:gm?.[1]?.trim()||''});
+    }
+    const cm = text.match(/CAPTION:\s*([\s\S]*)/);
+    STATE.instaResult = {slides, caption:cm?.[1]?.trim()||''};
+    STATE.instaSlide = 0;
+    saveState();
+    renderInstaResult();
+  } catch(err) {
+    const r = document.getElementById('insta-result');
+    if (r) r.innerHTML = '<p style="color:var(--rose-text);font-size:12px">Erreur de génération. Vérifie ta connexion.</p>';
+  }
+  if (btn) { btn.textContent='✦ Générer le carrousel'; btn.disabled=false; btn.style.background=''; }
+};
+
+function renderInstaResult() {
+  const r = document.getElementById('insta-result');
+  if (!r || !STATE.instaResult) return;
+  const {slides, caption} = STATE.instaResult;
+  const slide = slides[STATE.instaSlide];
+
+  r.innerHTML = '';
+
+  // Caption
+  const captionBox = document.createElement('div');
+  captionBox.style.cssText='background:rgba(237,213,208,0.5);border-radius:10px;padding:12px;margin-bottom:12px;';
+  const captionHeader = document.createElement('div');
+  captionHeader.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+  captionHeader.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--rose-text);text-transform:uppercase;letter-spacing:0.7px">Caption</div>';
+  const copyCapBtn = document.createElement('button');
+  copyCapBtn.className='copy-btn';
+  copyCapBtn.style.background='var(--rose-deep)';
+  copyCapBtn.textContent='Copier';
+  copyCapBtn.onclick=()=>copyText(caption,copyCapBtn);
+  captionHeader.appendChild(copyCapBtn);
+  captionBox.appendChild(captionHeader);
+  captionBox.appendChild(Object.assign(document.createElement('div'),{style:'font-size:12px;color:var(--rose-text);line-height:1.6;',textContent:caption}));
+  r.appendChild(captionBox);
+
+  // Slide nav
+  const slideNav = document.createElement('div');
+  slideNav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
+  slideNav.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:0.7px">Slide ${STATE.instaSlide+1}/${slides.length}</div>`;
+  const dots = document.createElement('div');
+  dots.className='dot-nav';
+  slides.forEach((_,i)=>{
+    const d = document.createElement('button');
+    d.className='dot';
+    d.style.cssText=`width:${i===STATE.instaSlide?20:8}px;background:${i===STATE.instaSlide?'var(--rose-deep)':'var(--border)'};`;
+    d.onclick=()=>{STATE.instaSlide=i;renderInstaResult();};
+    dots.appendChild(d);
+  });
+  const copyAllBtn = document.createElement('button');
+  copyAllBtn.className='copy-btn';
+  copyAllBtn.style.background='var(--vert-deep)';
+  copyAllBtn.textContent='Tout copier';
+  copyAllBtn.onclick=()=>{
+    const all=slides.map((s,i)=>`── SLIDE ${i+1} ──\nTexte : ${s.texte}${s.sous?'\nSous-titre : '+s.sous:''}\n\nPrompt Grok :\n${s.grok}`).join('\n\n');
+    copyText(all,copyAllBtn,'Tout copier');
+  };
+  slideNav.append(dots,copyAllBtn);
+  r.appendChild(slideNav);
+
+  // Active slide
+  const slideBox = document.createElement('div');
+  slideBox.style.cssText='background:rgba(200,221,216,0.5);border-radius:12px;padding:14px;';
+
+  const preview = document.createElement('div');
+  preview.className='slide-preview';
+  preview.innerHTML=`<div class="slide-preview-title">${slide.texte}</div>${slide.sous?`<div class="slide-preview-sub">${slide.sous}</div>`:''}<div class="slide-preview-hint">aperçu · texte dans l'image</div>`;
+  slideBox.appendChild(preview);
+
+  const grokHeader = document.createElement('div');
+  grokHeader.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+  grokHeader.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--vert-text);text-transform:uppercase;letter-spacing:0.7px">Prompt Grok</div>';
+  const copyGrokBtn = document.createElement('button');
+  copyGrokBtn.className='copy-btn';
+  copyGrokBtn.style.background='var(--vert-deep)';
+  copyGrokBtn.textContent='Copier';
+  copyGrokBtn.onclick=()=>copyText(slide.grok,copyGrokBtn);
+  grokHeader.appendChild(copyGrokBtn);
+  slideBox.appendChild(grokHeader);
+  slideBox.appendChild(Object.assign(document.createElement('div'),{style:'font-size:12px;color:var(--vert-text);line-height:1.6;white-space:pre-wrap;',textContent:slide.grok}));
+  r.appendChild(slideBox);
+
+  // Prev/Next
+  const navBtns = document.createElement('div');
+  navBtns.className='nav-btns';
+  const prev=document.createElement('button');
+  prev.className='nav-btn-slide';
+  prev.textContent='← Précédent';
+  prev.disabled=STATE.instaSlide===0;
+  prev.style.color=STATE.instaSlide===0?'var(--mid)':'var(--dark)';
+  prev.onclick=()=>{if(STATE.instaSlide>0){STATE.instaSlide--;renderInstaResult();}};
+  const next=document.createElement('button');
+  next.className='nav-btn-slide';
+  next.textContent='Suivant →';
+  next.disabled=STATE.instaSlide===slides.length-1;
+  next.style.color=STATE.instaSlide===slides.length-1?'var(--mid)':'var(--dark)';
+  next.onclick=()=>{if(STATE.instaSlide<slides.length-1){STATE.instaSlide++;renderInstaResult();}};
+  navBtns.append(prev,next);
+  r.appendChild(navBtns);
+}
+
+// ── ROADMAP TAB ────────────────────────────────────────────────────────────
+function renderRoadmap() {
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+
+  const allItems = STATE.roadmap.flatMap(p=>p.items);
+  const totalDone = allItems.filter(i=>i.done).length;
+  const total = allItems.length;
+  const pct = Math.round(totalDone/total*100);
+
+  const globalCard = document.createElement('div');
+  globalCard.style.cssText='background:var(--dark);border-radius:14px;padding:16px;margin-bottom:16px;';
+  globalCard.innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--rose);text-transform:uppercase;letter-spacing:0.8px">Progression globale</div>
+      <div style="font-size:12px;font-weight:700;color:var(--rose)">${totalDone}/${total}</div>
+    </div>
+    <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-bottom:6px">
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--rose-deep),var(--vert-deep));border-radius:99px;transition:width 0.6s ease"></div>
+    </div>
+    <div style="font-size:10px;color:var(--rose);opacity:0.45">${pct}% du lancement accompli</div>`;
+  wrap.appendChild(globalCard);
+
+  STATE.roadmap.forEach(phase => {
+    const pDone = phase.items.filter(i=>i.done).length;
+    const pTotal = phase.items.length;
+    const pPct = Math.round(pDone/pTotal*100);
+
+    const pc = document.createElement('div');
+    pc.className='phase-card';
+    pc.style.cssText=`background:${phase.color}50;border-radius:14px;padding:16px;margin-bottom:12px;`;
+
+    const ph = document.createElement('div');
+    ph.className='phase-header';
+    ph.innerHTML=`
+      <div>
+        <div style="font-size:10px;font-weight:700;color:${phase.deep};text-transform:uppercase;letter-spacing:1px">${phase.phase}</div>
+        <div style="font-size:15px;font-weight:700;color:${phase.text};font-family:'Playfair Display',serif;margin-top:1px">${phase.label}</div>
+        <div style="font-size:11px;color:${phase.deep};opacity:0.7;margin-top:2px">${phase.dates}</div>
+      </div>
+      <div class="phase-badge" style="background:${phase.deep}">${pPct}%</div>`;
+    pc.appendChild(ph);
+
+    const pt = document.createElement('div');
+    pt.className='phase-prog-track';
+    pt.innerHTML=`<div class="phase-prog-fill" style="width:${pPct}%;background:${phase.deep}"></div>`;
+    pc.appendChild(pt);
+
+    phase.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className='todo-row';
+      row.style.marginBottom='9px';
+      const chk = document.createElement('button');
+      chk.className='todo-check';
+      chk.style.borderColor=phase.deep;
+      if (item.done) { chk.style.background=phase.deep; chk.textContent='✓'; }
+      chk.onclick = () => {
+        item.done = !item.done;
+        saveState(); updateProgress(); renderContent();
+      };
+      const txt = document.createElement('span');
+      txt.className='todo-text'+(item.done?' done':'');
+      txt.style.color=phase.text;
+      txt.style.fontSize='12px';
+      txt.textContent=item.text;
+      row.append(chk,txt);
+      pc.appendChild(row);
+    });
+
+    wrap.appendChild(pc);
+  });
+  return wrap;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function renderContent() {
+  const content = document.getElementById('content');
+  content.innerHTML='';
+  let view;
+  if (STATE.tab==='home') view=renderHome();
+  else if (STATE.tab==='todos') view=renderTodos();
+  else if (STATE.tab==='agenda') view=renderAgenda();
+  else if (STATE.tab==='insta') view=renderInsta();
+  else if (STATE.tab==='roadmap') view=renderRoadmap();
+  if (view) content.appendChild(view);
+  renderNav();
+  updateProgress();
+}
+
+renderContent();
+</script>
+</body>
+</html>
